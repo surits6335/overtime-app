@@ -1,5 +1,6 @@
 const express = require('express')
 const Employee = require('../db/models/employee')
+const Project = require('../db/models/project')
 const router = new express.Router()
 
 router.use(express.json())
@@ -22,17 +23,19 @@ router.post('/', async (req, res) => {
     }
 })
 
-router.patch('/:id', async (req, res) => {
+router.patch('/', async (req, res) => {
     try {
-        if(!req.body.proposedProjectId) { throw new Error('Project Id not defined')}
-        const selectedEmployee = await Employee.findById(req.params.id)
-        if(!selectedEmployee) { return res.status(404).send('Employee not found')}
-        if(selectedEmployee.assignedProjectIds.indexOf(req.body.proposedProjectId) !== 1) {
-            throw new Error('Already assigned to this project')
-        }
-        selectedEmployee.assignedProjectIds.push(req.body.proposedProjectId)
-        const savedEmployee = await selectedEmployee.save()
-        res.send(savedEmployee)
+        const selectedProject = await Project.findById(req.body.proposedProjectId)
+        if(!selectedProject) { return res.status(404).send('Project not found')}
+        req.body.assignedEmployeeIds.forEach(async id => {
+            const selectedEmployee = await Employee.findById(id)
+            if(!selectedEmployee) { return res.status(404).send('Employee not found')}
+            if(selectedEmployee.assignedProjectIds.indexOf(req.body.proposedProjectId) === -1) {
+                selectedEmployee.assignedProjectIds.push(req.body.proposedProjectId)
+            }
+            await selectedEmployee.save()
+        })
+        res.send('Assigned successfully')
     }
     catch(error) {
         res.status(400).send(error.message)

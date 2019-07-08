@@ -7,7 +7,7 @@ const projectSchema = mongoose.Schema({
         required: true
     },
     shifts: [{
-        name: {
+        shiftName: {
             type: String,
             required: true
         },
