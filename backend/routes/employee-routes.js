@@ -17,7 +17,7 @@ router.post('/', async (req, res) => {
         }
         res.send(savedEmployee)
     }
-    catch(error) {
+    catch (error) {
         res.status(400).send(error.message)
         console.log(error.message)
     }
@@ -26,18 +26,25 @@ router.post('/', async (req, res) => {
 router.patch('/', async (req, res) => {
     try {
         const selectedProject = await Project.findById(req.body.proposedProjectId)
-        if(!selectedProject) { return res.status(404).send('Project not found')}
-        req.body.assignedEmployeeIds.forEach(async id => {
-            const selectedEmployee = await Employee.findById(id)
-            if(!selectedEmployee) { return res.status(404).send('Employee not found')}
-            if(selectedEmployee.assignedProjectIds.indexOf(req.body.proposedProjectId) === -1) {
+        if (!selectedProject) { return res.status(404).send('Project not found') }
+        for (let i = 0; i < req.body.addedEmployeeIds.length; i++) {
+            const selectedEmployee = await Employee.findById(req.body.addedEmployeeIds[i])
+            if (!selectedEmployee) { return res.status(404).send(`Assigned Employee not found of id ${req.body.addedEmployeeIds[i]}`) }
+            if (selectedEmployee.assignedProjectIds.indexOf(req.body.proposedProjectId) === -1) {
                 selectedEmployee.assignedProjectIds.push(req.body.proposedProjectId)
             }
             await selectedEmployee.save()
-        })
-        res.send('Assigned successfully')
+        }
+        for (let i = 0; i < req.body.removedEmployeeIds.length; i++) {
+            const selectedEmployee = await Employee.findById(req.body.removedEmployeeIds[i])
+            if (!selectedEmployee) { return res.status(404).send(`Assigned Employee not found of id ${req.body.removedEmployeeIds[i]}`) }
+            selectedEmployee.assignedProjectIds = selectedEmployee.assignedProjectIds.filter(id => id != req.body.proposedProjectId)
+            await selectedEmployee.save()
+        }
+        res.send({})
+
     }
-    catch(error) {
+    catch (error) {
         res.status(400).send(error.message)
         console.log(error.message)
     }
@@ -48,7 +55,7 @@ router.get('/', async (req, res) => {
         const selectedEmployee = await Employee.find()
         res.send(selectedEmployee)
     }
-    catch(error) {
+    catch (error) {
         res.status(400).send(error.message)
         console.log(error.message)
     }
@@ -57,10 +64,10 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const selectedEmployee = await Employee.findById(req.params.id)
-        if(!selectedEmployee) { return res.status(404).send('Employee not found')}
+        if (!selectedEmployee) { return res.status(404).send('Employee not found') }
         res.send(selectedEmployee)
     }
-    catch(error) {
+    catch (error) {
         res.status(400).send(error.message)
         console.log(error.message)
     }
